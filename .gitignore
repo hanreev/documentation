@@ -1,6 +1,8 @@
 __pycache__
+/.vscode
 /env
 /test
-/.vscode
+/build
+/dist
+documentation.ini
 *.log
-*.ini

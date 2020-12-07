@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>465</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>400</width>
+    <height>100</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Documentaton</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="1">
+    <widget class="QLineEdit" name="le_source"/>
+   </item>
+   <item row="0" column="2">
+    <widget class="QToolButton" name="btn_source">
+     <property name="text">
+      <string>...</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1" colspan="2">
+    <widget class="QLineEdit" name="le_title"/>
+   </item>
+   <item row="1" column="1">
+    <widget class="QLineEdit" name="le_output"/>
+   </item>
+   <item row="9" column="1">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="lbl_title">
+     <property name="text">
+      <string>Title</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0" colspan="3">
+    <widget class="QPlainTextEdit" name="te_log">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Output</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Source</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="QToolButton" name="btn_output">
+     <property name="text">
+      <string>...</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0" colspan="3">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btn_clearLog">
+       <property name="text">
+        <string>Clear Log</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btn_start">
+       <property name="text">
+        <string>Start</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="3" column="0" colspan="3">
+    <widget class="QGroupBox" name="gb_paperSize">
+     <property name="title">
+      <string>Paper Size</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Size</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Height (cm)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="QLineEdit" name="le_paperHeight"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Width (cm)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="le_paperWidth"/>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="cb_paperSize"/>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Orientation</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QComboBox" name="cb_paperOrientation"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="4" column="0" colspan="3">
+    <widget class="QGroupBox" name="gb_margins">
+     <property name="title">
+      <string>Margins (cm)</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="le_mTop"/>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="lbl_mTop">
+        <property name="text">
+         <string>Top</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="lbl_mBottom">
+        <property name="text">
+         <string>Bottom</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QLineEdit" name="le_mBottom"/>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="le_mLeft"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="lbl_mLeft">
+        <property name="text">
+         <string>Left</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="lbl_mRight">
+        <property name="text">
+         <string>Right</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QLineEdit" name="le_mRight"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="6" column="0">
+    <widget class="QLabel" name="label_7">
+     <property name="text">
+      <string>Supervisor</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="1" colspan="2">
+    <widget class="QLineEdit" name="le_supervisor"/>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>le_source</tabstop>
+  <tabstop>btn_source</tabstop>
+  <tabstop>le_output</tabstop>
+  <tabstop>btn_output</tabstop>
+  <tabstop>cb_paperSize</tabstop>
+  <tabstop>cb_paperOrientation</tabstop>
+  <tabstop>le_paperWidth</tabstop>
+  <tabstop>le_paperHeight</tabstop>
+  <tabstop>le_mTop</tabstop>
+  <tabstop>le_mBottom</tabstop>
+  <tabstop>le_mLeft</tabstop>
+  <tabstop>le_mRight</tabstop>
+  <tabstop>le_title</tabstop>
+  <tabstop>le_supervisor</tabstop>
+  <tabstop>te_log</tabstop>
+  <tabstop>btn_clearLog</tabstop>
+  <tabstop>btn_start</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

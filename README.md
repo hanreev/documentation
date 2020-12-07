@@ -1,0 +1,3 @@
+ # Documentation
+
+ Automated photo documentation

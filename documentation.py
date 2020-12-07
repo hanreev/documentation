@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import math
 import os
 import re
 import sys
@@ -18,8 +17,162 @@ from ui_documentation import Ui_Form
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 log_filename = os.path.join(BASE_DIR, 'documentation.log')
 settings_filename = os.path.join(BASE_DIR, 'documentation.ini')
-template = os.path.join(BASE_DIR, 'template.html')
 logo = os.path.join(BASE_DIR, 'logo.png')
+
+template = '''<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Document</title>
+
+    <style>
+      @page {
+        size: [PAGE_SIZE];
+
+        @frame content_frame {
+          top: [MARGIN_TOP];
+          left: [MARGIN_LEFT];
+          right: [MARGIN_RIGHT];
+        }
+
+        @frame footer_frame {
+          -pdf-frame-content: footer_content;
+          top: 26.5cm;
+          left: [MARGIN_LEFT];
+          right: [MARGIN_RIGHT];
+        }
+      }
+
+      body {
+        font-family: Helvetica;
+      }
+
+      h1 {
+        font-size: 18pt;
+        margin: 0;
+      }
+
+      h2 {
+        font-size: 14pt;
+        margin: 0;
+      }
+
+      h3 {
+        font-size: 11pt;
+        font-weight: 500;
+        margin: 0;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      td.box {
+        width: 18pt;
+        height: 16pt;
+        border: 1pt solid black;
+        text-align: center;
+        padding-top: 2pt;
+      }
+
+      td.separator {
+        width: 6pt;
+      }
+
+      .valign-top {
+        vertical-align: top;
+      }
+
+      .valign-bottom {
+        vertical-align: bottom;
+      }
+
+      .table-box td {
+        font-weight: bold;
+        font-size: 10pt;
+        height: 16pt;
+      }
+
+      .header {
+        margin-bottom: 0.5cm;
+      }
+
+      .table-content {
+        page-break-after: always;
+      }
+
+      .table-content img {
+        width: 100%;
+      }
+
+      .img-container {
+        text-align: center;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="footer_content" style="text-align: center; font-size: 10pt; font-weight: bold">
+      <p style="margin-bottom: 30pt">PENANGGUNG JAWAB LAPANGAN</p>
+      <p id="supervisor" style="text-decoration: underline; margin-bottom: 0"></p>
+      <p style="margin-top: 0">Team Leader</p>
+    </div>
+  </body>
+</html>
+'''
+
+header_template = '''<div class="header">
+    <table>
+    <tr>
+        <td width="30%" class="valign-top">
+        <table>
+            <tr>
+            <td width="1.6cm" class="valign-top">
+                <img class="logo" width="1.6cm" />
+            </td>
+            <td>
+                <h2>PEMERINTAH KOTA JAMBI</h2>
+                <h3>DINAS PEKERJAAN UMUM DAN PENATAAN RUANG</h3>
+                <p style="font-size: 8pt; margin: 0">
+                ALAMAT: JL. H. ZAINIR HAVIZ NO. 04, KEC. KOTABARU JAMBI TELP. 40553
+                </p>
+            </td>
+            </tr>
+        </table>
+        </td>
+        <td align="center">
+        <h1 class="title"></h1>
+        </td>
+        <td width="30%">
+        <table class="table-box">
+            <tr>
+            <td>
+                <table>
+                <tr class="no-distribusi">
+                    <td>NOMOR DISTRIBUSI KE</td>
+                </tr>
+                </table>
+            </td>
+            </tr>
+            <tr>
+            <td style="vertical-align: bottom">NOMOR LEMBAR KARTU LEGER JALAN:</td>
+            </tr>
+            <tr>
+            <td>
+                <table>
+                <tr class="no-leger">
+                    <td></td>
+                </tr>
+                </table>
+            </td>
+            </tr>
+        </table>
+        </td>
+    </tr>
+    </table>
+</div>
+'''
 
 table_template = '''
 <table class="table-content">
@@ -111,6 +264,13 @@ class Documentation(QWidget, Ui_Form):
         self.load_settings()
         self.show()
 
+        # TODO: Adjust template for different paper sizes
+        # Lock paper size and orientation
+        self.cb_paperSize.setCurrentText('A3')
+        self.cb_paperSize.setDisabled(True)
+        self.cb_paperOrientation.setCurrentText('Landscape')
+        self.cb_paperOrientation.setDisabled(True)
+
     def setup_signals(self):
         self.btn_source.clicked.connect(self.browse_source)
         self.btn_output.clicked.connect(self.browse_output)
@@ -162,6 +322,39 @@ class Documentation(QWidget, Ui_Form):
 
         return pisa_status.err
 
+    def get_header(self, no_ruas, page_number):
+        no_distribusi = self.le_no_dist.text().strip()
+        no_leger = self.le_no_lembar.text()
+
+        def replace_no_leger(match):
+            return match.group(1) + str(no_ruas) + match.group(3) + '{:0>3}'.format(page_number) + match.group(5)
+        no_leger = re.sub(r'^(\d{2} )(\d{3})( .{2} \w )(\d{3})( \d)$', replace_no_leger, no_leger)
+
+        header_soup = BeautifulSoup(header_template, 'lxml')
+        header_soup.find(class_='logo')['src'] = 'file:///' + logo.replace('\\', '/')
+        header_soup.find(class_='title').string = self.le_title.text()
+        tr_no_distribusi = header_soup.find('tr', class_='no-distribusi')
+        tr_no_leger = header_soup.find('tr', class_='no-leger')
+
+        for n in no_distribusi:
+            td = header_soup.new_tag('td')
+            if n == ' ':
+                td['class'] = 'separator'
+            else:
+                td['class'] = 'box'
+                td.string = n
+            tr_no_distribusi.append(td)
+
+        for n in no_leger:
+            td = header_soup.new_tag('td')
+            if n == ' ':
+                td['class'] = 'separator'
+            else:
+                td['class'] = 'box'
+                td.string = n
+            tr_no_leger.append(td)
+        return header_soup
+
     def insert_picture(self, src_dir, output_dir):
         basename = os.path.basename(src_dir)
         parts = re.split(r' ?- ?', basename)
@@ -175,77 +368,56 @@ class Documentation(QWidget, Ui_Form):
             pictures.extend(
                 glob(os.path.join(src_dir, '**', 'STA ' + filetype), recursive=True))
 
-        no_distribusi = '12345'
-        page_count = math.ceil(len(pictures) / 6)
-        no_leger = '15 {} -- K {:0>3} 1'.format(no_ruas, page_count)
+        paper_size = self.cb_paperSize.currentText().lower()
+        if paper_size == 'custom':
+            page_size = '{}cm {}cm'.format(
+                self.le_paperWidth.text(), self.le_paperWidth.text())
+        else:
+            page_size = '{} {}'.format(
+                paper_size, self.cb_paperOrientation.currentText().lower())
+        template_content = template
+        template_content = template_content.replace(
+            '[PAGE_SIZE]', page_size)
+        template_content = template_content.replace(
+            '[MARGIN_TOP]', self.le_mTop.text() + 'cm')
+        template_content = template_content.replace(
+            '[MARGIN_BOTTOM]', self.le_mBottom.text() + 'cm')
+        template_content = template_content.replace(
+            '[MARGIN_LEFT]', self.le_mLeft.text() + 'cm')
+        template_content = template_content.replace(
+            '[MARGIN_RIGHT]', self.le_mRight.text() + 'cm')
+        soup = BeautifulSoup(template_content, 'lxml')
 
-        with open(template) as fp:
-            template_content = fp.read()
-            paper_size = self.cb_paperSize.currentText().lower()
-            if paper_size == 'custom':
-                page_size = '{}cm {}cm'.format(
-                    self.le_paperWidth.text(), self.le_paperWidth.text())
-            else:
-                page_size = '{} {}'.format(
-                    paper_size, self.cb_paperOrientation.currentText().lower())
-            template_content = template_content.replace(
-                '[PAGE_SIZE]', page_size)
-            template_content = template_content.replace(
-                '[MARGIN_TOP]', self.le_mTop.text() + 'cm')
-            template_content = template_content.replace(
-                '[MARGIN_BOTTOM]', self.le_mBottom.text() + 'cm')
-            template_content = template_content.replace(
-                '[MARGIN_LEFT]', self.le_mLeft.text() + 'cm')
-            template_content = template_content.replace(
-                '[MARGIN_RIGHT]', self.le_mRight.text() + 'cm')
-            soup = BeautifulSoup(template_content, 'lxml')
-
-        soup.find(id='logo')['src'] = 'file:///' + logo.replace('\\', '/')
-        soup.find(id='title').string = self.le_title.text()
         soup.find(id='supervisor').string = '( {} )'.format(
             self.le_supervisor.text())
-        tr_no_distribusi = soup.find('tr', id='no-distribusi')
-        tr_no_leger = soup.find('tr', id='no-leger')
-
-        for n in no_distribusi:
-            td = soup.new_tag('td')
-            td['class'] = 'box'
-            td.string = n
-            tr_no_distribusi.append(td)
-
-        for n in no_leger:
-            td = soup.new_tag('td')
-            if n == ' ':
-                td['class'] = 'separator'
-            else:
-                td['class'] = 'box'
-                td.string = n
-            tr_no_leger.append(td)
-
-        pictures = []
-        for filetype in ['*.jpg', '*.jpeg', '*.png']:
-            pictures.extend(
-                glob(os.path.join(src_dir, '**', 'STA ' + filetype), recursive=True))
 
         self.write_log('# Pictures found: ' + str(len(pictures)))
 
+        header_soup = None
         table_soup = None
+        page_number = 1
         for i, pic_path in enumerate(pictures):
             cell_idx = i % 6
             if cell_idx == 0:
+                if header_soup is not None:
+                    soup.body.append(header_soup)
                 if table_soup is not None:
                     soup.body.append(table_soup)
+                header_soup = self.get_header(no_ruas, page_number)
                 table_soup = BeautifulSoup(table_template, 'lxml')
+                page_number += 1
             pic_soup = BeautifulSoup(picture_template, 'lxml')
             pic_soup.find('img')['src'] = 'file:///' + \
                 pic_path.replace('\\', '/')
             pic_soup.find('td', class_='no-ruas').string = no_ruas
             pic_soup.find('td', class_='nama-ruas').string = nm_ruas
-            m_sta = re.match(r'STA ([\d+]+) .+', os.path.basename(pic_path))
+            m_sta = re.match(r'STA ([\d+]+).*', os.path.basename(pic_path))
             sta = m_sta.group(1) if m_sta else ''
             pic_soup.find('td', class_='sta').string = sta
             table_soup.find('td', class_='cell-' +
                             str(cell_idx)).append(pic_soup)
+        if header_soup is not None:
+            soup.body.append(header_soup)
         if table_soup is not None:
             soup.body.append(table_soup)
 
@@ -259,6 +431,8 @@ class Documentation(QWidget, Ui_Form):
         self.le_source.setText(self.settings.value('Input/Source'))
         self.le_output.setText(self.settings.value('Input/Output'))
         self.le_title.setText(self.settings.value('Input/Title'))
+        self.le_no_dist.setText(self.settings.value('Input/DistributionNumber', '12345'))
+        self.le_no_lembar.setText(self.settings.value('Input/PageNumber', '15 000 -- K 000 1'))
         self.le_supervisor.setText(self.settings.value('Input/Supervisor'))
         self.cb_paperSize.setCurrentText(
             self.settings.value('Page/Size', 'A3'))
@@ -276,6 +450,8 @@ class Documentation(QWidget, Ui_Form):
         self.settings.setValue('Input/Source', self.le_source.text())
         self.settings.setValue('Input/Output', self.le_output.text())
         self.settings.setValue('Input/Title', self.le_title.text())
+        self.settings.setValue('Input/DistributionNumber', self.le_no_dist.text())
+        self.settings.setValue('Input/PageNumber', self.le_no_lembar.text())
         self.settings.setValue('Input/Supervisor', self.le_supervisor.text())
         self.settings.setValue('Page/Size', self.cb_paperSize.currentText())
         self.settings.setValue(

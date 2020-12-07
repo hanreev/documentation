@@ -89,7 +89,6 @@ class Documentation(QWidget, Ui_Form):
     def setup_ui(self):
         self.setupUi(self)
 
-        self.setWindowTitle('AutoDoc')
         paper_sizes = ['Legal', 'Letter']
         for i in range(7):
             paper_sizes.append('A' + str(i))

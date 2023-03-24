@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['documentation.py'],
-             pathex=['C:\\Users\\elkaaba\\Desktop\\dokumentation'],
+             pathex=['E:\\dev\\documentation'],
              binaries=[],
              datas=[('logo.png', '.'),
                     ('folder.png', '.'),

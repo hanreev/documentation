@@ -10,6 +10,7 @@ from PyQt5.QtCore import QSettings
 from PyQt5.QtGui import QDoubleValidator
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox, QWidget
 from xhtml2pdf import pisa
+from reportlab.lib import pagesizes
 
 from logger import create_logger
 from ui_documentation import Ui_Form
@@ -44,7 +45,7 @@ template = '''<!DOCTYPE html>
       }
 
       body {
-        font-family: Helvetica;
+        font-family: Helvetica sans-serif;
       }
 
       h1 {
@@ -222,7 +223,7 @@ picture_template = '''
     </tr>
     <tr>
         <td></td>
-        <td>KM</td>
+        <td>STA</td>
         <td width="10pt">:</td>
         <td class="sta"></td>
         <td></td>
@@ -242,12 +243,18 @@ class Documentation(QWidget, Ui_Form):
     def setup_ui(self):
         self.setupUi(self)
 
-        paper_sizes = ['Legal', 'Letter']
-        for i in range(7):
-            paper_sizes.append('A' + str(i))
-            paper_sizes.append('B' + str(i))
-        for paper_size in sorted(paper_sizes):
+        paper_sizes = []
+
+        for attribute in dir(pagesizes):
+            if attribute.startswith('_'):
+                continue
+            if attribute in ['mm', 'inch', 'portrait', 'landscape', 'elevenSeventeen', 'legal', 'letter']:
+                continue
+            paper_sizes.append(attribute)
+
+        for paper_size in sorted(paper_sizes, key=lambda ps: re.sub(r'(\d+)', lambda m: '{:0>4}'.format(m.group(1)), ps)):
             self.cb_paperSize.addItem(paper_size)
+
         self.cb_paperSize.addItem('Custom')
         self.cb_paperOrientation.addItem('Portrait')
         self.cb_paperOrientation.addItem('Landscape')
@@ -259,6 +266,10 @@ class Documentation(QWidget, Ui_Form):
         self.le_mBottom.setValidator(QDoubleValidator(0, 10, 4, self))
         self.le_mLeft.setValidator(QDoubleValidator(0, 10, 4, self))
         self.le_mRight.setValidator(QDoubleValidator(0, 10, 4, self))
+
+        # TODO: Remove these lines to enable supervisor in footer
+        self.le_supervisor.hide()
+        self.label_7.hide()
 
         self.setup_signals()
         self.load_settings()
@@ -317,10 +328,15 @@ class Documentation(QWidget, Ui_Form):
 
     def convert_to_pdf(self, content, output):
         self.write_log('# Writing PDF: ' + output)
-        with open(output, 'wb') as fp:
-            pisa_status = pisa.CreatePDF(content, dest=fp)
+        try:
+            with open(output, 'wb') as fp:
+                pisa_status = pisa.CreatePDF(content, dest=fp)
 
-        return pisa_status.err
+            self.write_log('Done!')
+            return pisa_status.err
+        except Exception as e:
+            QMessageBox.critical(self, 'Error', str(e))
+            return 1
 
     def get_header(self, no_ruas, page_number):
         no_distribusi = self.le_no_dist.text().strip()
@@ -368,6 +384,7 @@ class Documentation(QWidget, Ui_Form):
             pictures.extend(
                 glob(os.path.join(src_dir, '**', 'STA ' + filetype), recursive=True))
 
+        pictures = sorted(pictures, key=lambda f: os.path.basename(f))
         paper_size = self.cb_paperSize.currentText().lower()
         if paper_size == 'custom':
             page_size = '{}cm {}cm'.format(
@@ -411,9 +428,16 @@ class Documentation(QWidget, Ui_Form):
                 pic_path.replace('\\', '/')
             pic_soup.find('td', class_='no-ruas').string = no_ruas
             pic_soup.find('td', class_='nama-ruas').string = nm_ruas
-            m_sta = re.match(r'STA ([\d+]+).*', os.path.basename(pic_path))
-            sta = m_sta.group(1) if m_sta else ''
-            pic_soup.find('td', class_='sta').string = sta
+            sta = ''
+            sta_suffix = ''
+            m_sta = re.match(r'STA ([\d+]+) *(KIRI|KANAN)*.*', os.path.basename(pic_path))
+            if m_sta:
+                sta = m_sta.group(1) or ''
+                sta_suffix = m_sta.group(2) or ''
+            pic_dir = os.path.basename(os.path.dirname(pic_path)).upper()
+            if pic_dir == 'KIRI' or pic_dir == 'KANAN':
+                sta_suffix = pic_dir
+            pic_soup.find('td', class_='sta').string = ' '.join([sta, sta_suffix])
             table_soup.find('td', class_='cell-' +
                             str(cell_idx)).append(pic_soup)
         if header_soup is not None:
@@ -421,8 +445,11 @@ class Documentation(QWidget, Ui_Form):
         if table_soup is not None:
             soup.body.append(table_soup)
 
-        self.convert_to_pdf(str(soup), output=os.path.join(
-            output_dir, '{}.pdf'.format(os.path.basename(src_dir))))
+        # TODO: Remove this lines to show footer
+        soup.find(id='footer_content').clear()
+
+        output = os.path.join(output_dir, '{}.pdf'.format(os.path.basename(src_dir)))
+        self.convert_to_pdf(str(soup), output=output.replace('\\', '/'))
 
     def load_settings(self):
         geometry = self.settings.value('Ui/Geometry')
